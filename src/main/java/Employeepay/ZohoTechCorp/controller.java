@@ -11,6 +11,10 @@ public class controller
 {
     @Autowired
     EmployeeDetailsService serv;
+
+    @Autowired
+    PayslipDetailService pserv; // payslip
+
     //url mapping - post(create),put(update),get(list,read),delete
     //http://localhost:8081/create
     @PostMapping("/create")
@@ -44,4 +48,54 @@ public class controller
     {
         return serv.readone(empid);
     }
+
+    @GetMapping("/readbyname/{name}")
+    public Employeedetails readingbyname(@PathVariable("name")String name)
+    {
+        return serv.readbyname(name);
+    }
+
+    @GetMapping("/greatestsalaries/{useramount}")
+    public List<Employeedetails> gettingtopsalarypeople(@PathVariable("useramount")double useramount)
+    {
+        return serv.readgreatestsalarypeople(useramount);
+    }
+
+    @PutMapping("/updateyoursalary/{empname}")
+    public  Employeedetails hikesalary(@PathVariable("empname")String empname)
+    {
+        return  serv.incrementbysalary(empname);
+    }
+
+    @PostMapping("/createpayslip")
+    public PayslipDetails newpayslip(@RequestBody PayslipDetails payslip)
+    {
+        Employeedetails temp=serv.gettingexactid(payslip.getEmployeeDetails().getEmpId());
+
+
+        double monthlysalary=temp.getEmpSalary()/12;
+
+        double basicsalary=monthlysalary+(monthlysalary*(payslip.getPayslipAllowance()/100));
+
+        payslip.setPayslipBasicsalary((int)basicsalary);
+
+        basicsalary=basicsalary-(basicsalary*payslip.getPayslipTds()/100);
+
+        payslip.setPayslipTakehome((int)basicsalary);
+
+        temp.getMypayslip().add(payslip);//one payslip get in my payslip
+
+        pserv.newpayslip(payslip);//creating an new payslip in payslip table
+
+        serv.create(temp);//updation-added one payslip in your empdetails
+
+        return payslip;
+    }
+    @GetMapping("getallpayslip/{empid}")
+    public List<PayslipDetails> callbyallpayslip(@PathVariable("empid") int empid)
+    {
+        Employeedetails emp=serv.gettingexactid(empid);
+        return pserv.getbyempdetails(emp);
+    }
+
 }

@@ -1,5 +1,6 @@
 package Employeepay.ZohoTechCorp;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,10 +10,12 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.Collection;
 
-@Entity
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "employeedetails")
 public class Employeedetails
 {
     @Id
@@ -30,5 +33,6 @@ public class Employeedetails
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @Nullable
     @JoinTable(name="Allrecords" , joinColumns = @JoinColumn(name="empId"), inverseJoinColumns = @JoinColumn(name="payslipId"))
-    private Collection<PayslipDetailsEntity> mypayslip=new ArrayList<PayslipDetailsEntity>();
+    @JsonManagedReference
+    private Collection<PayslipDetails> mypayslip=new ArrayList<PayslipDetails>();
 }
