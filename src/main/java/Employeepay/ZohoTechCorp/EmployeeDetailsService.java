@@ -1,16 +1,20 @@
 package Employeepay.ZohoTechCorp;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class EmployeeDetailsService
+public class EmployeeDetailsService implements UserDetailsService//pre defined interface class
 {
     @Autowired //object creation
     EmployeedetailsRepository repo;
+
 
     public Employeedetails create (Employeedetails emp)
     {
@@ -53,4 +57,17 @@ public class EmployeeDetailsService
     {
         return repo.findById(id).orElse(new Employeedetails());
     }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
+    {
+        Employeedetails emp = repo.findByEmpUsername(username);
+        if(emp == null)
+        {
+            throw new UsernameNotFoundException(username);
+        }
+        return emp;
+    }
 }
+
+

@@ -1,16 +1,22 @@
 package Employeepay.ZohoTechCorp;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.beans.Encoder;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/ZohoTech")
+@CrossOrigin(origins = "http://localhost:3000")
 public class controller
 {
     @Autowired
     EmployeeDetailsService serv;
+    @Autowired
+    PasswordEncoder encoder;
 
     @Autowired
     PayslipDetailService pserv; // payslip
@@ -20,6 +26,8 @@ public class controller
     @PostMapping("/create")
     public String Makecreate(@RequestBody Employeedetails emp)
     {
+        String temp = encoder.encode(emp.getPassword());
+        emp.setEmpPassword(temp);
         return serv.create(emp).getEmpName()+ " has been added in your database ";
     }
 
@@ -37,10 +45,11 @@ public class controller
         return temp.getEmpId()+" has been updated in your database";
     }
 
-    @DeleteMapping("/deleteone/{id}")
-    public String remove(@PathVariable("id") int id)
+    @DeleteMapping("/deleteone/{user}")
+    public String remove(@PathVariable("user") String user)
     {
-        return serv.remove(id) + " ";
+        Employeedetails emp=purpose(user);
+        return serv.remove(emp.getEmpId())+" ";
     }
 
     @GetMapping("/readone/{empid}")
@@ -67,27 +76,32 @@ public class controller
         return  serv.incrementbysalary(empname);
     }
 
-    @PostMapping("/createpayslip")
-    public PayslipDetails newpayslip(@RequestBody PayslipDetails payslip)
+    @PostMapping("/createpayslip/{user}")
+    public PayslipDetails newpayslip(@PathVariable ("user") String user ,@RequestBody PayslipDetails payslip)
     {
-        Employeedetails temp=serv.gettingexactid(payslip.getEmployeeDetails().getEmpId());
+        //Employeedetails temp=serv.gettingexactid(payslip.getEmployeeDetails().getEmpId());
 
-
+        Employeedetails temp=purpose(user);
         double monthlysalary=temp.getEmpSalary()/12;
 
-        double basicsalary=monthlysalary+(monthlysalary*(payslip.getPayslipAllowance()/100));
+        //double basicsalary=monthlysalary+(monthlysalary*(payslip.getPayslipAllowance()/100));
+        double basicsalary=monthlysalary-(monthlysalary*(payslip.getPayslipAllowance()/100));
 
         payslip.setPayslipBasicsalary((int)basicsalary);
 
-        basicsalary=basicsalary-(basicsalary*payslip.getPayslipTds()/100);
+        //basicsalary=basicsalary-(basicsalary*payslip.getPayslipTds()/100);
+        monthlysalary=basicsalary-(monthlysalary*payslip.getPayslipTds()/100);
 
-        payslip.setPayslipTakehome((int)basicsalary);
+        //payslip.setPayslipTakehome((int)basicsalary);
+        payslip.setPayslipTakehome((int)monthlysalary);
 
         temp.getMypayslip().add(payslip);//one payslip get in my payslip
 
-        pserv.newpayslip(payslip);//creating an new payslip in payslip table
+        //pserv.newpayslip(payslip);//creating an new payslip in payslip table
+        payslip.setEmployeeDetails(temp);
+        pserv.newpayslip(payslip);
 
-        serv.create(temp);//updation-added one payslip in your empdetails
+       // serv.create(temp);//updation-added one payslip in your empdetails
 
         return payslip;
     }
@@ -96,6 +110,18 @@ public class controller
     {
         Employeedetails emp=serv.gettingexactid(empid);
         return pserv.getbyempdetails(emp);
+    }
+
+    @GetMapping("/{user}")//http://localhost:8082/ZealousEmpDetails/ManoHari
+    public Employeedetails purpose(@PathVariable("user")String user)
+    {
+        Employeedetails emp=(Employeedetails) serv.loadUserByUsername(user);
+        return emp;
+    }
+    @GetMapping("/fetch/{user}")
+    public List<PayslipDetails> getbyEmployee(@PathVariable("user")String user)
+    {
+        return  pserv.getbyempdetails(purpose(user));
     }
 
 }

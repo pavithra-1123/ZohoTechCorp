@@ -11,6 +11,7 @@ import java.util.List;
 @Repository
 public interface EmployeedetailsRepository extends JpaRepository<Employeedetails,Integer>
 {
+    public Employeedetails findByEmpUsername(String Username);
     public Employeedetails findAllByEmpName(String Name);
     //if we want to search the value by using employee name, we create userdefined no implement method by using findAllByEmpName
 
